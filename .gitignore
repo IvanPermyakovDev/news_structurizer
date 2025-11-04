@@ -1,2 +1,7 @@
 **__pycache__**
 .news_structurizer_venv/**
+lassification/models_out*/ 
+*.safetensors
+venv/
+best/
+last/
