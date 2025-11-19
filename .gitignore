@@ -5,3 +5,6 @@ lassification/models_out*/
 venv/
 best/
 last/
+segmentation/*
+rut5_extractor/final_model/*
+rut5_extractor/rut5_news_attributes/checkpoint-4540/*
