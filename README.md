@@ -1,7 +1,7 @@
 # News Structurizer: Отчет о результатах обучения
 
 Этот проект использует гибридный подход для извлечения структурированной информации из новостных текстов:
-1.  **BERT (DeepPavlov/sbert_large_nlu_ru)**: Классификация атрибутов `topic` и `scale`.
+1.  **BERT (ai-forever/sbert_large_nlu_ru)**: Классификация атрибутов `topic` и `scale`.
 2.  **T5 (ai-forever/ruT5-base)**: Генерация атрибутов `title`, `key_events`, `location`, `key_names`.
 
 ---
