@@ -39,27 +39,50 @@
 | **Title** | **0.83** |
 | **Key Events** | **0.76** |
 
-## 3. Итоговая архитектура пайплайна
+## 3. Сегментация текста (Topic Segmenter)
 
-Для обработки новой новости используется следующий алгоритм:
+Модель для определения границ между тематическими блоками в тексте. Используется для разделения потока новостей на отдельные сообщения.
+
+### Метрики (Validation)
+
+| Метрика | Значение |
+| :--- | :---: |
+| **F1** | **0.9085** |
+| **Precision** | **0.9308** |
+| **Recall** | **0.8874** |
+
+---
+
+## 4. Итоговая архитектура пайплайна
+
+Для обработки потока новостей используется следующий алгоритм:
 
 ```python
-def process_news(text):
-    # 1. Классификация (BERT)
-    topic = bert_model.predict(text)  # "технологии и наука"
-    scale = bert_model.predict(text)  # "global"
+def process_news_stream(text):
+    # 1. Сегментация (Topic Segmenter)
+    # Разбиваем поток текста на отдельные новости
+    news_segments = segmenter.segment(text)
 
-    # 2. Генерация (T5)
-    title = t5_model.generate("заголовок: " + text)
-    events = t5_model.generate("событие: " + text)
-    location = t5_model.generate("локация: " + text)
-    names = t5_model.generate("имена: " + text)
+    results = []
+    for segment in news_segments:
+        # 2. Классификация (BERT)
+        topic = bert_model.predict(segment)  # "технологии и наука"
+        scale = bert_model.predict(segment)  # "global"
 
-    return {
-        "topic": topic,
-        "scale": scale,
-        "title": title,
-        "key_events": events,
-        "location": location,
-        "key_names": names
-    }
+        # 3. Генерация (T5)
+        title = t5_model.generate("заголовок: " + segment)
+        events = t5_model.generate("событие: " + segment)
+        location = t5_model.generate("локация: " + segment)
+        names = t5_model.generate("имена: " + segment)
+
+        results.append({
+            "text": segment,
+            "topic": topic,
+            "scale": scale,
+            "title": title,
+            "key_events": events,
+            "location": location,
+            "key_names": names
+        })
+
+    return results

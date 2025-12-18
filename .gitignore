@@ -11,3 +11,5 @@ segmentation_v2/
 punctuation_restore/
 rut5_extractor/final_model/*
 rut5_extractor/rut5_news_attributes/checkpoint-4540/*
+topicsegmenter/checkpoints/*
+topicsegmenter/debug/
