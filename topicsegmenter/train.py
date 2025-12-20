@@ -204,10 +204,10 @@ def main():
     # 1.1 Load Synthetic Data (if available)
     synthetic_train = None
     synthetic_val = None
-    if os.path.exists("dataset.json"):
+    if os.path.exists("../data/dataset.json"):
         print("Found dataset.json, loading synthetic data...")
-        synthetic_train = SyntheticDataset("dataset.json", tokenizer, cfg, is_train=True, epoch_multiplier=10)
-        synthetic_val = SyntheticDataset("dataset.json", tokenizer, cfg, is_train=False, epoch_multiplier=2) # Меньше множитель для валидации
+        synthetic_train = SyntheticDataset("../data/dataset.json", tokenizer, cfg, is_train=True, epoch_multiplier=10)
+        synthetic_val = SyntheticDataset("../data/dataset.json", tokenizer, cfg, is_train=False, epoch_multiplier=2) # Меньше множитель для валидации
 
     # 1.2 Load Main Data
     if os.path.exists(cfg.val_path):
