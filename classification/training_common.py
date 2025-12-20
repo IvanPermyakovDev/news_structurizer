@@ -20,6 +20,7 @@ from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
     DataCollatorWithPadding,
+    EarlyStoppingCallback,
     Trainer,
     TrainerCallback,
     TrainingArguments,
@@ -27,16 +28,16 @@ from transformers import (
 from transformers.trainer_callback import PrinterCallback
 
 
-MODEL_NAME = "DeepPavlov/rubert-base-cased"
+MODEL_NAME = "kz-transformers/kaz-roberta-conversational"
 TOPIC_LABELS = [
-    "политика",
+    "мәдениет",
     "спорт",
+    "технология",
+    "экология",
     "экономика",
-    "технологии и наука",
-    "культура и искусство",
-    "экология и климат",
-    "mixed",
+    "саясат",
 ]
+# саясат, спорт, экономика, технология, мәдениет, экология
 SCALE_LABELS = ["local", "global"]
 
 
@@ -63,14 +64,12 @@ def build_tokenizer(model_name: str) -> AutoTokenizer:
     return tokenizer
 
 
-def load_and_split_dataset(
+def _load_and_validate_frame(
     json_path: str | Path,
     label_column: str,
     allowed_labels: Sequence[str],
-    seed: int,
-    test_size: float = 0.10,
-) -> DatasetDict:
-    """Load the JSON dataset and create train/validation splits."""
+) -> pd.DataFrame:
+    """Load JSON and validate columns/labels."""
     path = Path(json_path)
     records = json.loads(path.read_text(encoding="utf-8"))
     frame = pd.DataFrame(records)
@@ -81,28 +80,49 @@ def load_and_split_dataset(
         missing_cols = ", ".join(sorted(missing))
         raise ValueError(f"Dataset is missing required columns: {missing_cols}")
 
+    # Drop rows with missing labels
+    frame = frame.dropna(subset=[label_column])
+
+    # Normalize labels to lowercase
+    frame[label_column] = frame[label_column].astype(str).str.lower()
+
     unexpected = sorted(set(frame[label_column].unique()) - set(allowed_labels))
     if unexpected:
         unexpected_labels = ", ".join(unexpected)
         raise ValueError(
             f"Dataset contains unexpected labels for '{label_column}': {unexpected_labels}"
         )
+    return frame
 
-    train_frame, test_frame = train_test_split(
-        frame,
-        test_size=test_size,
-        stratify=frame[label_column],
-        random_state=seed,
-    )
-    validation_size = test_size / (1 - test_size)
-    train_frame, val_frame = train_test_split(
-        train_frame,
-        test_size=validation_size,
-        stratify=train_frame[label_column],
-        random_state=seed,
-    )
 
-    val_frame = pd.concat([val_frame, test_frame], ignore_index=True)
+def load_and_split_dataset(
+    json_path: str | Path,
+    label_column: str,
+    allowed_labels: Sequence[str],
+    seed: int,
+    test_size: float = 0.10,
+    val_json_path: str | Path | None = None,
+) -> DatasetDict:
+    """Load the JSON dataset. If val_json_path is provided, use it as validation set."""
+    train_frame = _load_and_validate_frame(json_path, label_column, allowed_labels)
+
+    if val_json_path is not None:
+        val_frame = _load_and_validate_frame(val_json_path, label_column, allowed_labels)
+    else:
+        train_frame, test_frame = train_test_split(
+            train_frame,
+            test_size=test_size,
+            stratify=train_frame[label_column],
+            random_state=seed,
+        )
+        validation_size = test_size / (1 - test_size)
+        train_frame, val_frame = train_test_split(
+            train_frame,
+            test_size=validation_size,
+            stratify=train_frame[label_column],
+            random_state=seed,
+        )
+        val_frame = pd.concat([val_frame, test_frame], ignore_index=True)
 
     return DatasetDict(
         train=Dataset.from_pandas(train_frame.reset_index(drop=True)),
@@ -255,6 +275,7 @@ def train_model(
     seed: int,
     use_fp16: bool,
     log_to_tensorboard: bool,
+    early_stopping_patience: int = 5,
 ) -> tuple[dict[str, float], Path, Path]:
     """Fine-tune the sequence classification model, returning metrics and checkpoint paths."""
     output_dir = Path(output_dir)
@@ -280,7 +301,11 @@ def train_model(
         learning_rate=learning_rate,
         num_train_epochs=epochs,
         eval_strategy="epoch",
-        save_strategy="no",
+        save_strategy="epoch",
+        save_total_limit=2,
+        load_best_model_at_end=True,
+        metric_for_best_model="macro_f1",
+        greater_is_better=True,
         weight_decay=0.01,
         warmup_ratio=0.06,
         logging_steps=50,
@@ -303,6 +328,8 @@ def train_model(
         last_dir=last_dir,
     )
 
+    early_stopping = EarlyStoppingCallback(early_stopping_patience=early_stopping_patience)
+
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -311,7 +338,7 @@ def train_model(
         data_collator=data_collator,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
-        callbacks=[best_tracker],
+        callbacks=[best_tracker, early_stopping],
     )
     trainer.remove_callback(PrinterCallback)
     trainer.add_callback(LogTableCallback(trainer, best_tracker))

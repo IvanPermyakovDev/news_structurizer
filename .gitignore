@@ -2,6 +2,7 @@
 .news_structurizer_venv/**
 lassification/models_out*/ 
 *.safetensors
+.claude
 venv/
 best/
 last/
@@ -13,3 +14,7 @@ rut5_extractor/final_model/*
 rut5_extractor/rut5_news_attributes/checkpoint-4540/*
 topicsegmenter/checkpoints/*
 topicsegmenter/debug/
+classification/models_out_kz
+extractor/t5gemma_kz_news_attributes
+topicsegmenter/
+transformers/

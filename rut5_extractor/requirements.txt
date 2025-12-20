@@ -1,9 +1,0 @@
-torch
-transformers
-datasets
-pandas
-scikit-learn
-sentencepiece
-accelerate
-evaluate
-rouge_score

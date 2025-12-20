@@ -18,7 +18,8 @@ from training_common import (
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Fine-tune ruBERT on topic classification.")
-    parser.add_argument("--data", required=True, help="Path to dataset JSON file.")
+    parser.add_argument("--data", required=True, help="Path to training dataset JSON file.")
+    parser.add_argument("--val_data", default=None, help="Path to validation dataset JSON file (optional).")
     parser.add_argument(
         "--out_dir",
         default="models_out/topic",
@@ -80,6 +81,7 @@ def main() -> None:
         allowed_labels=TOPIC_LABELS,
         seed=args.seed,
         test_size=args.test_size,
+        val_json_path=args.val_data,
     )
 
     tokenizer = build_tokenizer(args.model_name)
