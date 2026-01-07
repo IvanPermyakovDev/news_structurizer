@@ -18,6 +18,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="news-structurizer")
     sub = parser.add_subparsers(dest="command", required=True)
 
+    p_asr = sub.add_parser("asr-audio", help="Run only ASR (audio -> text) using Whisper.")
+    p_asr.add_argument("--audio", required=True, help="Path to audio file.")
+    p_asr.add_argument("--out", help="Write JSON to a file. If omitted, prints to stdout.")
+    p_asr.add_argument(
+        "--asr-model",
+        default=_env_default("NS_ASR_MODEL") or "abilmansplus/whisper-turbo-ksc2",
+    )
+    p_asr.add_argument("--asr-language", default=_env_default("NS_ASR_LANGUAGE") or "kk")
+    p_asr.add_argument("--device", default=_env_default("NS_DEVICE"))
+
     p_seg = sub.add_parser("segment-text", help="Run only segmentation on input text.")
     p_seg.add_argument("--text", help="Input text. If omitted, reads from stdin.")
     p_seg.add_argument("--file", help="Read input text from a file.")
@@ -54,6 +64,23 @@ def build_parser() -> argparse.ArgumentParser:
     p_text.add_argument("--extractor-model", default=_env_default("NS_EXTRACTOR_MODEL"))
     p_text.add_argument("--device", default=_env_default("NS_DEVICE"))
 
+    p_audio = sub.add_parser(
+        "process-audio",
+        help="Run full pipeline on audio (ASR -> structuring).",
+    )
+    p_audio.add_argument("--audio", required=True, help="Path to audio file.")
+    p_audio.add_argument("--out", help="Write report JSON to a file. If omitted, prints to stdout.")
+    p_audio.add_argument("--segmenter-model", default=_env_default("NS_SEGMENTER_MODEL"))
+    p_audio.add_argument("--topic-model", default=_env_default("NS_TOPIC_MODEL"))
+    p_audio.add_argument("--scale-model", default=_env_default("NS_SCALE_MODEL"))
+    p_audio.add_argument("--extractor-model", default=_env_default("NS_EXTRACTOR_MODEL"))
+    p_audio.add_argument(
+        "--asr-model",
+        default=_env_default("NS_ASR_MODEL") or "abilmansplus/whisper-turbo-ksc2",
+    )
+    p_audio.add_argument("--asr-language", default=_env_default("NS_ASR_LANGUAGE") or "kk")
+    p_audio.add_argument("--device", default=_env_default("NS_DEVICE"))
+
     return parser
 
 
@@ -74,6 +101,23 @@ def _require(value: str | None, flag: str) -> str:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
+
+    if args.command == "asr-audio":
+        from .asr import WhisperConfig, WhisperTranscriber
+
+        asr_cfg = WhisperConfig(
+            model=args.asr_model,
+            language=args.asr_language,
+        )
+        transcriber = WhisperTranscriber(asr_cfg, device=args.device)
+        result = transcriber.transcribe(args.audio)
+        payload = json.dumps(result, ensure_ascii=False, indent=2)
+
+        if args.out:
+            Path(args.out).write_text(payload, encoding="utf-8")
+        else:
+            print(payload)
+        return
 
     if args.command == "segment-text":
         from .segmentation import NewsSegmenter
@@ -153,6 +197,27 @@ def main() -> None:
             Path(args.out).write_text(payload, encoding="utf-8")
         else:
             print(payload)
+        return
+
+    if args.command == "process-audio":
+        config = PipelineConfig(
+            segmenter_model_path=_require(args.segmenter_model, "--segmenter-model"),
+            topic_model_path=_require(args.topic_model, "--topic-model"),
+            scale_model_path=_require(args.scale_model, "--scale-model"),
+            extractor_model_path=_require(args.extractor_model, "--extractor-model"),
+            asr_model=args.asr_model,
+            asr_language=args.asr_language,
+            device=args.device,
+        )
+
+        report = Pipeline(config).process_audio(args.audio)
+        payload = json.dumps(report.to_dict(), ensure_ascii=False, indent=2)
+
+        if args.out:
+            Path(args.out).write_text(payload, encoding="utf-8")
+        else:
+            print(payload)
+        return
 
 
 if __name__ == "__main__":

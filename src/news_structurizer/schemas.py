@@ -11,6 +11,8 @@ class PipelineConfig:
     topic_model_path: str
     scale_model_path: str
     extractor_model_path: str
+    asr_model: str | None = None
+    asr_language: str = "kk"
     device: str | None = None
 
 
@@ -41,4 +43,3 @@ class Report:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
-
