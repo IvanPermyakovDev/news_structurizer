@@ -20,23 +20,10 @@ def main() -> None:
     from news_structurizer import Pipeline, PipelineConfig
 
     repo_root = Path(__file__).resolve().parents[1]
-    default_segmenter = (
-        repo_root / "research" / "ml" / "topicsegmenter" / "checkpoints" / "best_model"
-    )
-    default_topic = (
-        repo_root / "research" / "ml" / "classification" / "models_out_kz" / "topic" / "best"
-    )
-    default_scale = (
-        repo_root / "research" / "ml" / "classification" / "models_out_kz" / "scale" / "best"
-    )
-    default_extractor = (
-        repo_root
-        / "research"
-        / "ml"
-        / "extractor"
-        / "t5gemma_270m_kz_news_attributes_frozen"
-        / "checkpoint-2000"
-    )
+    default_segmenter = repo_root / "models" / "segmenter"
+    default_topic = repo_root / "models" / "topic"
+    default_scale = repo_root / "models" / "scale"
+    default_extractor = repo_root / "models" / "extractor"
 
     parser = argparse.ArgumentParser(description="Run full pipeline on audio (ASR -> structuring).")
     parser.add_argument("--audio", required=True, help="Path to audio file.")

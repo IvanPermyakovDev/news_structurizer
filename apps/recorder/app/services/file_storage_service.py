@@ -13,3 +13,16 @@ class FileStorageService:
         station_dir.mkdir(parents=True, exist_ok=True)
         filename = f"{station_name}_{now.strftime('%Y%m%d_%H%M')}{extension}"
         return str(station_dir / filename)
+
+    def generate_job_filepath(
+        self,
+        job_id: str,
+        station_name: str,
+        extension: str = ".mp3",
+    ) -> str:
+        now = datetime.now()
+        date_str = now.strftime("%Y-%m-%d")
+        station_dir = self.base_output_dir / date_str / station_name
+        station_dir.mkdir(parents=True, exist_ok=True)
+        filename = f"{job_id}{extension}"
+        return str(station_dir / filename)

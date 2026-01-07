@@ -36,12 +36,8 @@ def main() -> None:
     from news_structurizer import NewsClassifier
 
     repo_root = Path(__file__).resolve().parents[1]
-    default_topic = (
-        repo_root / "research" / "ml" / "classification" / "models_out_kz" / "topic" / "best"
-    )
-    default_scale = (
-        repo_root / "research" / "ml" / "classification" / "models_out_kz" / "scale" / "best"
-    )
+    default_topic = repo_root / "models" / "topic"
+    default_scale = repo_root / "models" / "scale"
 
     parser = argparse.ArgumentParser(description="Run only classification (text -> topic/scale).")
     parser.add_argument("--text", help="Input text (if omitted, reads stdin).")

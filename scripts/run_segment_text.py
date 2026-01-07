@@ -37,7 +37,7 @@ def main() -> None:
     from news_structurizer import NewsSegmenter
 
     repo_root = Path(__file__).resolve().parents[1]
-    default_model = repo_root / "research" / "ml" / "topicsegmenter" / "checkpoints" / "best_model"
+    default_model = repo_root / "models" / "segmenter"
 
     parser = argparse.ArgumentParser(description="Run only segmentation (text -> segments).")
     parser.add_argument("--text", help="Input text (if omitted, reads stdin).")
