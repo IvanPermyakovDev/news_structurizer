@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "news-structurizer"
+version = "0.1.0"
+description = "Audio news -> ASR -> segmentation -> topic classification -> information extraction (low-resource languages)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [{ name = "news_structurizer" }]
+
+# Keep dependencies minimal for stage 2; heavy ML deps can be installed separately.
+dependencies = []
+
+[project.optional-dependencies]
+ml = [
+  "torch",
+  "transformers",
+]
+service = [
+  "fastapi",
+  "uvicorn",
+  "schedule",
+  "requests",
+  "pika",
+]
+dev = [
+  "ruff",
+]
+
+[project.scripts]
+news-structurizer = "news_structurizer.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
