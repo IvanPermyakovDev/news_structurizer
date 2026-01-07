@@ -1,0 +1,12 @@
+torch
+transformers
+accelerate
+sentencepiece
+datasets
+pandas
+numpy
+scikit-learn
+tensorboard
+evaluate
+tqdm
+streamlit

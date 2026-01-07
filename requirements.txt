@@ -1,12 +1,4 @@
-torch
-transformers
-accelerate
-sentencepiece
-datasets
-pandas
-numpy
-scikit-learn
-tensorboard
-evaluate
-tqdm
-streamlit
+# Kept for backward compatibility.
+# ML/dev dependencies list lives in `research/requirements-ml.txt` until the project
+# is migrated to `pyproject.toml`.
+-r research/requirements-ml.txt

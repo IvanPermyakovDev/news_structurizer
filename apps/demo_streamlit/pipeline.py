@@ -2,16 +2,18 @@
 News Structurizer Pipeline
 Streamlit-приложение для обработки потока новостей.
 
-Запуск: streamlit run pipeline.py
+Запуск: streamlit run apps/demo_streamlit/pipeline.py
 """
 
+# ruff: noqa: E402
+
 import sys
-import os
 from pathlib import Path
 
-# Добавляем пути для импорта локальных модулей
-BASE_DIR = Path(__file__).parent
-sys.path.insert(0, str(BASE_DIR / "topicsegmenter"))
+# Добавляем пути для импорта локальных модулей (ML код сейчас живет в `research/ml/*`
+# до переноса в пакет)
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "research" / "ml" / "topicsegmenter"))
 
 import re
 import inspect
@@ -221,20 +223,43 @@ class NewsAttributeGenerator:
 
 @st.cache_resource
 def load_segmenter():
-    model_path = str(BASE_DIR / "topicsegmenter" / "checkpoints" / "best_model")
+    model_path = str(
+        REPO_ROOT
+        / "research"
+        / "ml"
+        / "topicsegmenter"
+        / "checkpoints"
+        / "best_model"
+    )
     return NewsSegmenter(model_path)
 
 
 @st.cache_resource
 def load_classifier():
-    topic_path = str(BASE_DIR / "classification" / "models_out_sbert_large_nlu_ru" / "topic" / "best")
-    scale_path = str(BASE_DIR / "classification" / "models_out_sbert_large_nlu_ru" / "scale" / "best")
+    topic_path = str(
+        REPO_ROOT
+        / "research"
+        / "ml"
+        / "classification"
+        / "models_out_sbert_large_nlu_ru"
+        / "topic"
+        / "best"
+    )
+    scale_path = str(
+        REPO_ROOT
+        / "research"
+        / "ml"
+        / "classification"
+        / "models_out_sbert_large_nlu_ru"
+        / "scale"
+        / "best"
+    )
     return NewsClassifier(topic_path, scale_path)
 
 
 @st.cache_resource
 def load_generator():
-    model_path = str(BASE_DIR / "rut5_extractor" / "final_model")
+    model_path = str(REPO_ROOT / "rut5_extractor" / "final_model")
     return NewsAttributeGenerator(model_path)
 
 

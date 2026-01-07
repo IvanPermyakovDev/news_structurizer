@@ -1,6 +1,7 @@
 **__pycache__**
 .news_structurizer_venv/**
-lassification/models_out*/ 
+classification/models_out*/
+research/ml/classification/models_out*/
 *.safetensors
 .claude
 venv/
@@ -17,7 +18,15 @@ topicsegmenter/debug/
 classification/models_out_kz
 extractor/t5gemma_kz_news_attributes
 extractor/t5gemma_270m_kz_news_attributes_frozen/checkpoint-2000
+research/ml/topicsegmenter/checkpoints/*
+research/ml/topicsegmenter/debug/
+research/ml/classification/models_out_kz
+research/ml/extractor/t5gemma_kz_news_attributes
+research/ml/extractor/t5gemma_270m_kz_news_attributes_frozen/checkpoint-2000
+IMPLEMENTATION_PLAN.md
+PROJECT_REORGANIZATION_PLAN.md
 # topicsegmenter/
 transformers/
+research/vendor/transformers/
 lib64
 .news_structurizer_venv/
