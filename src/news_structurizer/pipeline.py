@@ -1,12 +1,25 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
 
-from .asr import WhisperConfig, WhisperTranscriber
-from .classification import NewsClassifier
-from .extraction import AttributeExtractor
 from .schemas import NewsItem, PipelineConfig, Report
-from .segmentation import NewsSegmenter
+
+if TYPE_CHECKING:
+    from .asr.whisper import WhisperTranscriber
+
+
+def _is_missing_ml_dep(exc: ModuleNotFoundError) -> bool:
+    return exc.name in {"torch", "transformers"}
+
+
+def _raise_missing_ml(exc: ModuleNotFoundError) -> None:
+    raise RuntimeError(
+        "Missing ML dependencies. Install extras:\n"
+        "  pip install -e '.[ml]'\n"
+        "or for dev:\n"
+        "  pip install -e '.[dev,ml]'\n"
+    ) from exc
 
 
 class Pipeline:
@@ -15,10 +28,16 @@ class Pipeline:
     def __init__(self, config: PipelineConfig) -> None:
         self.config = config
 
-        self.segmenter = NewsSegmenter(
-            model_path=config.segmenter_model_path,
-            device=config.device,
-        )
+        try:
+            from .segmentation.topicsegmenter import NewsSegmenter
+            from .classification.topic_scale import NewsClassifier
+            from .extraction.attributes import AttributeExtractor
+        except ModuleNotFoundError as exc:
+            if _is_missing_ml_dep(exc):
+                _raise_missing_ml(exc)
+            raise
+
+        self.segmenter = NewsSegmenter(model_path=config.segmenter_model_path, device=config.device)
         self.classifier = NewsClassifier(
             topic_model_path=config.topic_model_path,
             scale_model_path=config.scale_model_path,
@@ -66,6 +85,13 @@ class Pipeline:
     def _get_transcriber(self) -> WhisperTranscriber:
         if self._transcriber is not None:
             return self._transcriber
+
+        try:
+            from .asr.whisper import WhisperConfig, WhisperTranscriber
+        except ModuleNotFoundError as exc:
+            if _is_missing_ml_dep(exc):
+                _raise_missing_ml(exc)
+            raise
 
         model = (
             self.config.asr_model

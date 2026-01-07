@@ -5,7 +5,6 @@ import json
 import os
 from pathlib import Path
 
-from .pipeline import Pipeline
 from .schemas import PipelineConfig
 
 
@@ -98,12 +97,30 @@ def _require(value: str | None, flag: str) -> str:
     return value
 
 
+def _is_missing_ml_dep(exc: ModuleNotFoundError) -> bool:
+    return exc.name in {"torch", "transformers"}
+
+
+def _ml_missing_message() -> str:
+    return (
+        "Missing ML dependencies. Install extras and retry:\n"
+        "  pip install -e '.[ml]'\n"
+        "or for dev:\n"
+        "  pip install -e '.[dev,ml]'\n"
+    )
+
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
     if args.command == "asr-audio":
-        from .asr import WhisperConfig, WhisperTranscriber
+        try:
+            from .asr.whisper import WhisperConfig, WhisperTranscriber
+        except ModuleNotFoundError as exc:
+            if _is_missing_ml_dep(exc):
+                raise SystemExit(_ml_missing_message()) from exc
+            raise
 
         asr_cfg = WhisperConfig(
             model=args.asr_model,
@@ -120,7 +137,12 @@ def main() -> None:
         return
 
     if args.command == "segment-text":
-        from .segmentation import NewsSegmenter
+        try:
+            from .segmentation.topicsegmenter import NewsSegmenter
+        except ModuleNotFoundError as exc:
+            if _is_missing_ml_dep(exc):
+                raise SystemExit(_ml_missing_message()) from exc
+            raise
 
         text = _load_text(args)
         if not text:
@@ -137,7 +159,12 @@ def main() -> None:
         return
 
     if args.command == "classify-text":
-        from .classification import NewsClassifier
+        try:
+            from .classification.topic_scale import NewsClassifier
+        except ModuleNotFoundError as exc:
+            if _is_missing_ml_dep(exc):
+                raise SystemExit(_ml_missing_message()) from exc
+            raise
 
         text = _load_text(args)
         if not text:
@@ -158,7 +185,12 @@ def main() -> None:
         return
 
     if args.command == "extract-text":
-        from .extraction import AttributeExtractor
+        try:
+            from .extraction.attributes import AttributeExtractor
+        except ModuleNotFoundError as exc:
+            if _is_missing_ml_dep(exc):
+                raise SystemExit(_ml_missing_message()) from exc
+            raise
 
         text = _load_text(args)
         if not text:
@@ -190,6 +222,13 @@ def main() -> None:
             device=args.device,
         )
 
+        try:
+            from .pipeline import Pipeline
+        except ModuleNotFoundError as exc:
+            if _is_missing_ml_dep(exc):
+                raise SystemExit(_ml_missing_message()) from exc
+            raise
+
         report = Pipeline(config).process_text(text)
         payload = json.dumps(report.to_dict(), ensure_ascii=False, indent=2)
 
@@ -209,6 +248,13 @@ def main() -> None:
             asr_language=args.asr_language,
             device=args.device,
         )
+
+        try:
+            from .pipeline import Pipeline
+        except ModuleNotFoundError as exc:
+            if _is_missing_ml_dep(exc):
+                raise SystemExit(_ml_missing_message()) from exc
+            raise
 
         report = Pipeline(config).process_audio(args.audio)
         payload = json.dumps(report.to_dict(), ensure_ascii=False, indent=2)

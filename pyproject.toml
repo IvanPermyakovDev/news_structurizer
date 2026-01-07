@@ -25,9 +25,13 @@ service = [
   "schedule",
   "requests",
   "pika",
+  "python-multipart",
 ]
 dev = [
   "ruff",
+  "pytest",
+  "pytest-cov",
+  "pre-commit",
 ]
 
 [project.scripts]
@@ -39,3 +43,6 @@ package-dir = { "" = "src" }
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

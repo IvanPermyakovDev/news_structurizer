@@ -26,6 +26,7 @@ research/ml/extractor/t5gemma_kz_news_attributes
 research/ml/extractor/t5gemma_270m_kz_news_attributes_frozen/checkpoint-2000
 IMPLEMENTATION_PLAN.md
 PROJECT_REORGANIZATION_PLAN.md
+PROFROADMAP.md
 # topicsegmenter/
 transformers/
 research/vendor/transformers/
