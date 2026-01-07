@@ -1,4 +1,23 @@
 **__pycache__**
 .news_structurizer_venv/**
+lassification/models_out*/ 
+*.safetensors
+.claude
+venv/
+best/
+last/
+segmentation/checkpoints/
+segmentation/artifacts/
+segmentation_v2/
+punctuation_restore/
+rut5_extractor/final_model/*
+rut5_extractor/rut5_news_attributes/checkpoint-4540/*
+topicsegmenter/checkpoints/*
+topicsegmenter/debug/
+classification/models_out_kz
+extractor/t5gemma_kz_news_attributes
+extractor/t5gemma_270m_kz_news_attributes_frozen/checkpoint-2000
+# topicsegmenter/
+transformers/
 lib64
 .news_structurizer_venv/
