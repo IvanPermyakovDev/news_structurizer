@@ -18,14 +18,17 @@ jobs:
 
       - name: Syntax check (compile)
         run: |
-          python -m compileall -q apps src
+          python -m compileall -q apps src tests
 
-      - name: Install Ruff
+      - name: Install dev dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install ruff
+          python -m pip install -e ".[dev]"
 
-      - name: Ruff (apps/, src/)
+      - name: Ruff (apps/, src/, tests/)
         run: |
-          ruff check apps src
+          ruff check apps src tests
 
+      - name: Pytest
+        run: |
+          pytest

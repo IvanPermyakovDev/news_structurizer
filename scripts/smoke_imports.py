@@ -15,11 +15,13 @@ def main() -> None:
     _ensure_src_on_path()
 
     import news_structurizer  # noqa: F401
-    from news_structurizer import AttributeExtractor, NewsClassifier, NewsSegmenter, Pipeline  # noqa: F401
+    from news_structurizer.cli import build_parser  # noqa: F401
+    from news_structurizer.schemas import PipelineConfig, Report  # noqa: F401
+
+    build_parser()
 
     print("Imports: OK")
 
 
 if __name__ == "__main__":
     main()
-

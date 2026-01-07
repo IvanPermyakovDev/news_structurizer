@@ -1,0 +1,156 @@
+Metadata-Version: 2.4
+Name: news-structurizer
+Version: 0.1.0
+Summary: Audio news -> ASR -> segmentation -> topic classification -> information extraction (low-resource languages).
+Author: news_structurizer
+License: Proprietary
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Provides-Extra: ml
+Requires-Dist: torch; extra == "ml"
+Requires-Dist: transformers; extra == "ml"
+Provides-Extra: service
+Requires-Dist: fastapi; extra == "service"
+Requires-Dist: uvicorn; extra == "service"
+Requires-Dist: schedule; extra == "service"
+Requires-Dist: requests; extra == "service"
+Requires-Dist: pika; extra == "service"
+Requires-Dist: python-multipart; extra == "service"
+Provides-Extra: dev
+Requires-Dist: ruff; extra == "dev"
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+Requires-Dist: pre-commit; extra == "dev"
+
+# News Structurizer
+
+Сервис и Python‑пакет для превращения новостного эфира (онлайн‑радио/стрим) в структурированный отчет.
+
+Пайплайн:
+1) запись эфира в аудиофайл
+2) ASR (Whisper) → текст
+3) сегментация текста на отдельные новости
+4) классификация темы/масштаба
+5) извлечение атрибутов новости (title/key_events/location/key_names)
+
+## Состав репозитория
+
+- `src/news_structurizer/` — installable пакет (core): `Pipeline.process_text()` / `Pipeline.process_audio()`
+- `apps/recorder/` — FastAPI API: создаёт job, пишет аудио, публикует сообщение в RabbitMQ
+- `apps/worker/` — RabbitMQ consumer: берёт запись и делает обработку через пакет
+- `apps/demo_streamlit/` — демо UI для ручной проверки пайплайна по тексту
+- `deploy/docker-compose.yml` — запуск сервисов
+- `models/` — локальные модели для docker (не коммитятся)
+- `research/` — обучение/оценки/эксперименты (не часть продукта)
+- `scripts/` — smoke/запуск пайплайна локально
+
+## Быстрый старт (Docker Compose)
+
+### 1) Подготовь модели
+
+Сборка использует `models/` и монтирует её в контейнеры как `/models` (см. `deploy/docker-compose.yml`).
+
+Ожидаемая структура:
+
+```text
+models/
+  segmenter/
+  topic/
+  scale/
+  extractor/
+  asr/        # опционально, если хочешь без скачивания из HF
+```
+
+Главное — чтобы внутри `models/` лежали **готовые папки моделей** (как `save_pretrained` директории).
+
+ASR модель (Whisper) можно скачать в `models/asr` скриптом (потребуется доступ к сети):
+
+```bash
+python scripts/download_asr_model.py --model abilmansplus/whisper-turbo-ksc2 --out models/asr
+```
+
+Чтобы worker не пытался скачивать модель “на лету”, задай `NS_ASR_MODEL=/models/asr` в `deploy/docker-compose.yml`.
+
+### 2) Запусти сервисы
+
+```bash
+docker compose -f deploy/docker-compose.yml up --build
+```
+
+Поднимутся:
+- `audio-recorder` (API) на `http://localhost:8000`
+- `worker` (консьюмер)
+- `rabbitmq` (UI: `http://localhost:15672`, guest/guest)
+
+## Как пользоваться API
+
+### 1) Записать эфир прямо сейчас
+
+`POST /api/v1/jobs/record-now`
+
+Пример:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/jobs/record-now \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "station_name": "test_station",
+    "stream_url": "https://example.com/stream.m3u8",
+    "duration_sec": 60,
+    "is_hls": true
+  }'
+```
+
+Ответ:
+```json
+{ "job_id": "..." }
+```
+
+### 2) Проверить статус
+
+`GET /api/v1/jobs/{job_id}`
+
+Статусы:
+- `queued` → `recording` → `recorded` → `processing` → `done`
+- либо `failed`
+
+### 3) Забрать результат
+
+- `GET /api/v1/jobs/{job_id}/report` → `report.json`
+- `GET /api/v1/jobs/{job_id}/transcript` → `transcript.txt`
+
+## Куда пишутся файлы
+
+Запись и результаты сохраняются в docker volumes и видны в контейнерах как `/data/...`:
+
+- Аудио:
+  - `/data/recordings/YYYY-MM-DD/<station_name>/<job_id>.mp3`
+- Job и результаты:
+  - `/data/jobs/<job_id>/job.json`
+  - `/data/jobs/<job_id>/transcript.txt`
+  - `/data/jobs/<job_id>/report.json`
+
+## Локальный запуск (без Docker)
+
+### 1) Smoke scripts
+
+```bash
+python scripts/smoke_imports.py
+python scripts/run_pipeline_text.py --device cpu
+python scripts/run_pipeline_audio.py --audio /path/to/file.mp3 --device cpu
+```
+
+По умолчанию `scripts/run_*` берут модели из `models/` (переопределяется флагами `--*-model`).
+
+### 2) Streamlit demo
+
+```bash
+streamlit run apps/demo_streamlit/pipeline.py
+```
+
+### 3) Установка пакета
+
+```bash
+pip install -e .
+news-structurizer --help
+```
