@@ -36,14 +36,7 @@ def main() -> None:
     from news_structurizer import AttributeExtractor
 
     repo_root = Path(__file__).resolve().parents[1]
-    default_model = (
-        repo_root
-        / "research"
-        / "ml"
-        / "extractor"
-        / "t5gemma_270m_kz_news_attributes_frozen"
-        / "checkpoint-2000"
-    )
+    default_model = repo_root / "models" / "extractor"
 
     parser = argparse.ArgumentParser(description="Run only attribute extraction (text -> fields).")
     parser.add_argument("--text", help="Input text (if omitted, reads stdin).")

@@ -5,13 +5,16 @@ import time
 from typing import Union, List
 
 from ..dto.config import ScheduleRule
+from ..dto.jobs import RecordNowDTO
 from ..coordination.recording_coordinator import RecordingCoordinator
+from .job_storage_service import JobStorageService
 
 
 class RecordingService:
     def __init__(self):
         self.configs = {}
         self.coordinator = RecordingCoordinator()
+        self.job_storage = JobStorageService()
         self._start_scheduler()
 
     def _start_scheduler(self):
@@ -77,3 +80,27 @@ class RecordingService:
             return False
         del self.configs[config_id]
         return True
+
+    def record_now(self, dto: RecordNowDTO) -> str:
+        job_id = str(uuid.uuid4())
+        url = dto.stream_url.strip()
+
+        self.job_storage.upsert_job(
+            job_id,
+            {
+                "status": "queued",
+                "station_name": dto.station_name,
+                "source_url": url,
+                "duration_sec": dto.duration_sec,
+                "is_hls": dto.is_hls,
+            },
+        )
+
+        self.coordinator.start_recording(
+            job_id=job_id,
+            station_name=dto.station_name,
+            stream_url=url,
+            duration_sec=dto.duration_sec,
+            is_hls=dto.is_hls,
+        )
+        return job_id

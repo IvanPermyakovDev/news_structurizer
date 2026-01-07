@@ -5,6 +5,7 @@ research/ml/classification/models_out*/
 *.safetensors
 .claude
 venv/
+models/
 best/
 last/
 segmentation/checkpoints/

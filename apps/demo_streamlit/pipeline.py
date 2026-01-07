@@ -10,8 +10,7 @@ Streamlit-приложение для обработки потока новос
 import sys
 from pathlib import Path
 
-# Добавляем пути для импорта локальных модулей (ML код сейчас живет в `research/ml/*`
-# до переноса в пакет)
+# Добавляем пути для импорта локальных модулей (модели по умолчанию лежат в `models/`).
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "research" / "ml" / "topicsegmenter"))
 
@@ -225,11 +224,8 @@ class NewsAttributeGenerator:
 def load_segmenter():
     model_path = str(
         REPO_ROOT
-        / "research"
-        / "ml"
-        / "topicsegmenter"
-        / "checkpoints"
-        / "best_model"
+        / "models"
+        / "segmenter"
     )
     return NewsSegmenter(model_path)
 
@@ -238,28 +234,20 @@ def load_segmenter():
 def load_classifier():
     topic_path = str(
         REPO_ROOT
-        / "research"
-        / "ml"
-        / "classification"
-        / "models_out_sbert_large_nlu_ru"
+        / "models"
         / "topic"
-        / "best"
     )
     scale_path = str(
         REPO_ROOT
-        / "research"
-        / "ml"
-        / "classification"
-        / "models_out_sbert_large_nlu_ru"
+        / "models"
         / "scale"
-        / "best"
     )
     return NewsClassifier(topic_path, scale_path)
 
 
 @st.cache_resource
 def load_generator():
-    model_path = str(REPO_ROOT / "rut5_extractor" / "final_model")
+    model_path = str(REPO_ROOT / "models" / "extractor")
     return NewsAttributeGenerator(model_path)
 
 

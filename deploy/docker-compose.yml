@@ -7,6 +7,37 @@ services:
       - "8000:8000"
     volumes:
       - recordings_volume:/data/recordings
+      - jobs_volume:/data/jobs
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ..
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_QUEUE: recordings
+      NS_DATA_DIR: /data
+
+      # Model paths inside the container; provide the actual models via `models_volume` or bind mount.
+      NS_SEGMENTER_MODEL: /models/segmenter
+      NS_TOPIC_MODEL: /models/topic
+      NS_SCALE_MODEL: /models/scale
+      NS_EXTRACTOR_MODEL: /models/extractor
+
+      # Default ASR model is `abilmansplus/whisper-turbo-ksc2` (will download if not cached).
+      # Override with a local model dir to avoid network usage:
+      # NS_ASR_MODEL: /models/asr
+      NS_ASR_LANGUAGE: kk
+
+      # Use cpu by default; set to `cuda:0` on GPU hosts with proper runtime.
+      NS_DEVICE: cpu
+    volumes:
+      - recordings_volume:/data/recordings:ro
+      - jobs_volume:/data/jobs
+      - ../models:/models:ro
     depends_on:
       - rabbitmq
     restart: unless-stopped
@@ -23,3 +54,4 @@ services:
 
 volumes:
   recordings_volume:
+  jobs_volume:
