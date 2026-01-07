@@ -19,3 +19,5 @@ extractor/t5gemma_kz_news_attributes
 extractor/t5gemma_270m_kz_news_attributes_frozen/checkpoint-2000
 # topicsegmenter/
 transformers/
+lib64
+.news_structurizer_venv/
