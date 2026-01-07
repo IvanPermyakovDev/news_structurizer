@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   audio-recorder:
-    build: .
+    build: ../apps/recorder
     ports:
       - "8000:8000"
     volumes:

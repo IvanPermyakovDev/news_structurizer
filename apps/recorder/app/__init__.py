@@ -1,0 +1,1 @@
+"""Recorder FastAPI service package."""

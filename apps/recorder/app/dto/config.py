@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Union, List, Literal
+from typing import List, Literal
 
 class ScheduleRule(BaseModel):
     type: Literal["fixed_hours", "hourly_range", "custom_durations"]
