@@ -1,0 +1,14 @@
+# Requirements for SeamlessM4T evaluation
+torch>=2.0.0
+transformers>=4.35.0
+sentencepiece
+protobuf>=3.20.0
+evaluate>=0.4.0
+jiwer
+soundfile
+scipy
+tqdm
+accelerate>=0.20.0
+
+# Optional for better performance
+# flash-attn>=2.0.0

@@ -1,0 +1,9 @@
+torch>=2.0.0
+transformers>=4.35.0
+datasets>=2.14.0
+evaluate>=0.4.0
+jiwer
+accelerate>=0.20.0
+soundfile
+librosa
+tqdm
