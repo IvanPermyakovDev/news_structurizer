@@ -30,6 +30,7 @@ service = [
 dev = [
   "ruff",
   "pytest",
+  "httpx",
   "pytest-cov",
   "pre-commit",
 ]
